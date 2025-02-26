@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'goodsAndItems',
+    'locationManagement',
 ]
 
 MIDDLEWARE = [
@@ -75,12 +78,14 @@ WSGI_APPLICATION = 'postalservice.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',  # Use PostgreSQL as the database backend
+        'NAME': 'postal',                      # Replace with your database name
+        'USER': 'postgres',                          # Replace with your database username
+        'PASSWORD': 'rootpass',                  # Replace with your database password
+        'HOST': 'localhost',                       # Set to 'localhost' for local development
+        'PORT': '5432',                            # Default PostgreSQL port
     }
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
