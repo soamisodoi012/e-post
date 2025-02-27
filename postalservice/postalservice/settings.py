@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'goodsAndItems',
     'locationManagement',
+    'postManagement',
+    'customer',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [

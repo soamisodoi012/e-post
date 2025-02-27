@@ -17,9 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from goodsAndItems import urls
-
+from customer import urls
+from postManagement import urls
+from locationManagement import urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('goodsAndItems.urls')),
+    path('', include('customer.urls')),
+    path('',include('locationManagement.urls')),
+    path('',include('postManagement.urls')),
 ]
