@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'postalservice.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',  # Use PostgreSQL as the database backend
-        'NAME': 'postal',                      # Replace with your database name
+        'NAME': 'postalMgnt',                      # Replace with your database name
         'USER': 'postgres',                          # Replace with your database username
         'PASSWORD': 'rootpass',                  # Replace with your database password
         'HOST': 'localhost',                       # Set to 'localhost' for local development

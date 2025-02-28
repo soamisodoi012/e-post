@@ -88,38 +88,31 @@ def view_cart(request):
     return JsonResponse({"status": "success", "cart": cart})
 @api_view(['POST'])
 def process_order_ship(request):
-    """ Process the order after the payment. """
+    """Process the order after the payment."""
     if request.method == "POST":
         try:
-            data = request.data  # Use DRF's request.data instead of json.loads(request.body)
-            print("Received Data:", data)
+            data = json.loads(request.body)
+            print("Received data:", data)
 
-            # Validate customer
-            if "customer" not in data:
-                return Response({"status": "error", "message": "Customer email is missing"}, status=400)
+            # Retrieve customer using email
+            if "customer" in data:
+                customer = get_object_or_404(Customer, username=data["customer"])  # Use email (username) to fetch the customer
+            else:
+                return JsonResponse({"status": "error", "message": "Customer email is missing"}, status=400)
 
-            # Fetch customer object using email (username)
-            customer = get_object_or_404(Customer, username=data["customer"])  # ✅ Get Customer instance
-
-            # Validate items
+            # Validate required fields
             if "items" not in data:
-                return Response({"status": "error", "message": "Missing items in the order"}, status=400)
+                return JsonResponse({"status": "error", "message": "Missing items in the order"}, status=400)
 
+            # Loop through items in the order and process
             for item_data in data["items"]:
-                if not all(k in item_data for k in ["item_id", "location1_id", "location2_id", "distance", "shipping_cost"]):
-                    return Response({"status": "error", "message": "Missing required item fields"}, status=400)
+                item = get_object_or_404(Item, itemCode=item_data["item_id"])  # Use itemCode instead of id
+                location1 = get_object_or_404(Address, addresId=item_data["location1"])  # Use addresId instead of id
+                location2 = get_object_or_404(Address, addresId=item_data["location2"])  # Use addresId instead of id
 
-                # Fetch item using itemCode (not id)
-                item = get_object_or_404(Item, itemCode=item_data["item_id"])
-
-                # Fetch locations using addresId (not id)
-                location1 = get_object_or_404(Address, addresId=item_data["location1_id"])
-                location2 = get_object_or_404(Address, addresId=item_data["location2_id"])
-
-                print("item",item)
-                print("item_data",item_data)
-                ShippingOrder.objects.create(
-                    customer=customer,  
+                # Create ShippingOrder model entry
+                order = ShippingOrder.objects.create(
+                    customer=customer,
                     item=item,
                     location1=location1,
                     location2=location2,
@@ -127,9 +120,11 @@ def process_order_ship(request):
                     shipping_cost=item_data["shipping_cost"]
                 )
 
-            return Response({"status": "success", "message": "Order placed successfully"}, status=201)
+            return JsonResponse({"status": "success", "message": "Order placed successfully"})
 
+        except json.JSONDecodeError:
+            return JsonResponse({"status": "error", "message": "Invalid JSON format"}, status=400)
         except ValueError as e:
-            return Response({"status": "error", "message": str(e)}, status=400)
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
-    return Response({"status": "error", "message": "Invalid request method"}, status=405)
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
