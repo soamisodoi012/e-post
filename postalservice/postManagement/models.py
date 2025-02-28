@@ -18,13 +18,13 @@ class ShippingOrder(models.Model):
     shipping_cost = models.FloatField()
     
     # Unique identifier based on customer, location1, and item
-    shipId = models.CharField(max_length=255, unique=True, editable=False, primary_key=True)
+    shipId = models.CharField(max_length=255, unique=False, editable=False, primary_key=True)
 
-    def save(self, *args, **kwargs):
-        # Generate a unique ID using customer username, location ID, and item code
-        if not self.shipId:
-            self.shipId = f"{self.customer.username}-{self.location1.addresId}-{self.item.itemCode}-{get_random_string(6)}"
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     # Generate a unique ID using customer username, location ID, and item code
+    #     if not self.shipId:
+    #         self.shipId = f"{self.customer.username}-{self.location1.addresId}-{self.item.itemCode}-{get_random_string(6)}"
+    #     super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"ShippingOrder {self.shipId} - Customer: {self.customer.username} - Item: {self.item.itemName}"
+    # def __str__(self):
+    #     return f"ShippingOrder {self.shipId} - Customer: {self.customer.username} - Item: {self.item.itemName}"

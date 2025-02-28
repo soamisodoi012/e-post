@@ -7,6 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 import json
+from .modelSerializer import ShippingOrderSerilizer
 from .models import ShippingOrder, Customer, Item, Address
 @api_view(['POST'])
 def add_to_shiping(request):
@@ -111,11 +112,13 @@ def process_order_ship(request):
                 location2 = get_object_or_404(Address, addresId=item_data["location2"])  # Use addresId instead of id
 
                 # Create ShippingOrder model entry
+                shipId = f"{customer}-{location1}" 
                 order = ShippingOrder.objects.create(
                     customer=customer,
                     item=item,
                     location1=location1,
                     location2=location2,
+                    shipId=shipId,
                     distance=item_data["distance"],
                     shipping_cost=item_data["shipping_cost"]
                 )
@@ -128,3 +131,19 @@ def process_order_ship(request):
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+@api_view(['GET'])
+def view_order(request):
+ param_value = request.GET.get('shipId')
+ print(param_value)  # Useful for debugging
+
+ if param_value:
+        # Fetch the specific ShippingOrder instance
+        try:
+            order = ShippingOrder.objects.get(shipId=param_value)
+            # Serialize the order
+            serializer = ShippingOrderSerilizer(order)
+            return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+        except ShippingOrder.DoesNotExist:
+            return JsonResponse({"error": "ShippingOrder not found."}, status=status.HTTP_404_NOT_FOUND)
+ else:
+        return JsonResponse({"error": "Parameter 'shipId' is missing in the request."}, status=status.HTTP_400_BAD_REQUEST)
