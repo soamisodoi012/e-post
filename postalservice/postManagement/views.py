@@ -9,6 +9,7 @@ from rest_framework.parsers import JSONParser
 import json
 from .modelSerializer import ShippingOrderSerilizer
 from .models import ShippingOrder, Customer, Item, Address
+import random
 @api_view(['POST'])
 def add_to_shiping(request):
     if request.method == "POST":
@@ -95,33 +96,59 @@ def process_order_ship(request):
             data = json.loads(request.body)
             print("Received data:", data)
 
-            # Retrieve customer using email
-            if "customer" in data:
-                customer = get_object_or_404(Customer, username=data["customer"])  # Use email (username) to fetch the customer
-            else:
-                return JsonResponse({"status": "error", "message": "Customer email is missing"}, status=400)
+            # Retrieve customer using email from the top-level key
+            customer = get_object_or_404(Customer, username=data["customer"])
+            print("Customer:", customer)
 
             # Validate required fields
-            if "items" not in data:
+            if "item" not in data or not data["item"]:
                 return JsonResponse({"status": "error", "message": "Missing items in the order"}, status=400)
 
-            # Loop through items in the order and process
-            for item_data in data["items"]:
-                item = get_object_or_404(Item, itemCode=item_data["item_id"])  # Use itemCode instead of id
-                location1 = get_object_or_404(Address, addresId=item_data["location1"])  # Use addresId instead of id
-                location2 = get_object_or_404(Address, addresId=item_data["location2"])  # Use addresId instead of id
+            total_distance = 0
+            total_shipping_cost = 0
+            
+            # Initialize variables for locations and items
+            location1 = None
+            location2 = None
+            order_items = []
 
-                # Create ShippingOrder model entry
-                shipId = f"{customer}-{location1}" 
-                order = ShippingOrder.objects.create(
-                    customer=customer,
-                    item=item,
-                    location1=location1,
-                    location2=location2,
-                    shipId=shipId,
-                    distance=item_data["distance"],
-                    shipping_cost=item_data["shipping_cost"]
-                )
+            # Loop through items in the order to retrieve details
+            for item_data in data["item"]:
+                print("Item Data:", item_data)  # Print item data for debugging
+
+                # Retrieve the item
+                item = get_object_or_404(Item, itemCode=item_data["item"])
+
+                # Retrieve locations for the item
+                loc1 = get_object_or_404(Address, addresId=item_data["location1"])
+                loc2 = get_object_or_404(Address, addresId=item_data["location2"])
+
+                # Update total distance and shipping cost
+                total_distance += item_data["distance"]
+                total_shipping_cost += item_data["shipping_cost"]
+
+                # Set locations (assuming all items have the same locations)
+                location1 = loc1
+                location2 = loc2
+
+                # Collect items for later use
+                order_items.append(item)
+
+            # Create the ShippingOrder instance with total values and locations
+            order = ShippingOrder.objects.create(
+                customer=customer,
+                shipId=f"{customer.username}-{random.randint(100000, 999999)}",  # Generate a unique shipId
+                distance=total_distance,
+                shipping_cost=total_shipping_cost,
+                location1=location1,
+                location2=location2
+            )
+
+            # Add items to the order
+            for item in order_items:
+                order.item.add(item)
+
+            order.save()  # Save the order after all items are added
 
             return JsonResponse({"status": "success", "message": "Order placed successfully"})
 
@@ -131,19 +158,3 @@ def process_order_ship(request):
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
-@api_view(['GET'])
-def view_order(request):
- param_value = request.GET.get('shipId')
- print(param_value)  # Useful for debugging
-
- if param_value:
-        # Fetch the specific ShippingOrder instance
-        try:
-            order = ShippingOrder.objects.get(shipId=param_value)
-            # Serialize the order
-            serializer = ShippingOrderSerilizer(order)
-            return JsonResponse(serializer.data, status=status.HTTP_200_OK)
-        except ShippingOrder.DoesNotExist:
-            return JsonResponse({"error": "ShippingOrder not found."}, status=status.HTTP_404_NOT_FOUND)
- else:
-        return JsonResponse({"error": "Parameter 'shipId' is missing in the request."}, status=status.HTTP_400_BAD_REQUEST)

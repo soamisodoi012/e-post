@@ -11,7 +11,7 @@ from django.utils.crypto import get_random_string
 
 class ShippingOrder(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    item = models.ManyToManyField(Item, related_name='shipping_orders')
     location1 = models.ForeignKey(Address, related_name='shipping_orders_from', on_delete=models.CASCADE)
     location2 = models.ForeignKey(Address, related_name='shipping_orders_to', on_delete=models.CASCADE)
     distance = models.FloatField()
