@@ -9,4 +9,4 @@ class CatSerializer(serializers.ModelSerializer):
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
-        fields = ('itemCode','itemName','catName')
+        fields = ('itemCode','itemName','catId')
