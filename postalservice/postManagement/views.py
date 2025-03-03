@@ -33,15 +33,15 @@ def add_to_shiping(request):
             data = json.loads(request.body)
             customer = data.get("customer")
             item = data.get("item")
-            shipping_cost = data.get("shipping_cost")  # Cost for this item
+             # Cost for this item
 
             # Retrieve locations
             loc1 = get_object_or_404(Address, addresId=data["location1"])
             loc2 = get_object_or_404(Address, addresId=data["location2"])
-
+            
             # Calculate distance between loc1 and loc2
             distance = haversine(loc1.latitude, loc1.longitude, loc2.latitude, loc2.longitude)
-
+            shipping_cost =distance * 0.5
             # Retrieve or create cart in session
             cart = request.session.get('shipping_cart', {})
             if 'items' not in cart:
@@ -77,7 +77,7 @@ def add_to_shiping(request):
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
 
 @api_view(['POST'])
-def remove_from_shiing_cart(request):
+def remove_from_shiping_cart(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -197,10 +197,7 @@ def review(request):
         if orderId:
             order = get_object_or_404(ShippingOrder, shipId=orderId)
 
-            # Update the status to 'reviewed' or any other status based on your logic
-            order.status = 'reviewed'
-
-            # Save the updated status to the database
+            order.status = request.GET.get('status')
             order.save()
 
             return JsonResponse({"status": "success", "message": "Order reviewed successfully", "order_status": order.status})

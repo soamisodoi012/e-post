@@ -6,6 +6,7 @@ urlpatterns = [
     path('addtoshipingorder/', views.process_order_ship),
     path('viewshipcart/',views.view_cart),
     path('vieworder/',views.review_order),
-    path('review/',views.review)
+    path('review/',views.review),
+    path('remove_from_shiping_cart/',views.remove_from_shiping_cart)
     
 ]
