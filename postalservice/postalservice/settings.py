@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'locationManagement',
     'postManagement',
     'customer',
+    'user',
     'phonenumber_field',
 ]
 
