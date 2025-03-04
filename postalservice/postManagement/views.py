@@ -33,9 +33,6 @@ def add_to_shiping(request):
             data = json.loads(request.body)
             customer = data.get("customer")
             item = data.get("item")
-             # Cost for this item
-
-            # Retrieve locations
             loc1 = get_object_or_404(Address, addresId=data["location1"])
             loc2 = get_object_or_404(Address, addresId=data["location2"])
             
@@ -193,11 +190,10 @@ def review_order(request):
 def review(request):
     if request.method == 'GET':
         orderId = request.GET.get('shipId')
-
         if orderId:
             order = get_object_or_404(ShippingOrder, shipId=orderId)
 
-            order.status = request.GET.get('status')
+            order.status = 'reviewed'
             order.save()
 
             return JsonResponse({"status": "success", "message": "Order reviewed successfully", "order_status": order.status})
@@ -206,3 +202,79 @@ def review(request):
             return JsonResponse({"status": "error", "message": "Missing shipId parameter"}, status=400)
 
     return JsonResponse({"status": "error", "message": "Invalid request method. Only GET is allowed."}, status=405)
+@api_view(['GET'])
+def delivered(request):
+    if request.method == 'GET':
+        orderId = request.GET.get('shipId')
+        if orderId:
+            order = get_object_or_404(ShippingOrder, shipId=orderId)
+
+            order.status = 'delivered'
+            order.save()
+
+            return JsonResponse({"status": "success", "message": "Order reviewed successfully", "order_status": order.status})
+
+        else:
+            return JsonResponse({"status": "error", "message": "Missing shipId parameter"}, status=400)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method. Only GET is allowed."}, status=405)
+@api_view(['GET'])
+def onshipping(request):
+    if request.method == 'GET':
+        orderId = request.GET.get('shipId')
+        
+        if not orderId:
+            return JsonResponse({"status": "error", "message": "Missing shipId parameter"}, status=400)
+
+        # Fetch the order
+        order = get_object_or_404(ShippingOrder, shipId=orderId)
+
+        # Update status
+        order.status = 'onshipping'
+        order.save()
+
+        # Serialize the order
+        order_data = {
+            "shipId": order.shipId,
+            "customer": order.customer.username,
+            "item": order.item,
+            "location1": order.location1.addresName,  # Adjust field name as needed
+            "location2": order.location2.addresName,  # Adjust field name as needed
+            "distance": order.distance,
+            "shipping_cost": order.shipping_cost,
+            "status": order.status
+        }
+        #data=ShippingOrderSerilizer(order)
+        return JsonResponse({"status": "success", "message": "Order status updated to onshipping", "order": order_data})
+
+    return JsonResponse({"status": "error", "message": "Invalid request method. Only GET is allowed."}, status=405)
+@api_view(['GET'])
+def customerHistory(request):
+    username = request.GET.get('username')
+
+    if not username:
+        return JsonResponse({"status": "error", "message": "Parameter 'username' is missing."}, status=400)
+
+    try:
+        customer = Customer.objects.get(username=username)
+    except Customer.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Customer not found."}, status=404)
+
+    # Filter only delivered orders for the given customer
+    orders = ShippingOrder.objects.filter(customer=customer, status="delivered")
+    delivered_count = orders.count()  # Count delivered orders
+    if not orders.exists():
+        return JsonResponse({
+            "status": "success",
+            "message": "No delivered orders found for this customer.",
+            "delivered_count": 0
+        }, status=200)
+
+    # Serialize the data
+    serializer = ShippingOrderSerilizer(orders, many=True)
+
+    return JsonResponse({
+        "status": "success",
+        "delivered_count": delivered_count,  # Include the count
+        "data": serializer.data
+    }, status=200, safe=False)

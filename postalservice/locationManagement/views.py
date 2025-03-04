@@ -18,3 +18,12 @@ def createAdress(request):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else: 
          return HttpResponse("Method Not Allowed", status=status.HTTP_405_METHOD_NOT_ALLOWED)
+@api_view(['GET'])
+def getAddress(request):
+    addresId=request.GET.get('addresId')
+    if not addresId:
+         return JsonResponse({"status": "error", "message": "Parameter 'addresId' is missing in the request."}, status=400)
+    queryset = Address.objects.filter(addresId=addresId)
+    data=AdressSerializer(queryset,many=True)
+    serialized_data = list(queryset.values())
+    return HttpResponse(data.data)

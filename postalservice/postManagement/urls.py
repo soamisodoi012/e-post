@@ -7,6 +7,10 @@ urlpatterns = [
     path('viewshipcart/',views.view_cart),
     path('vieworder/',views.review_order),
     path('review/',views.review),
-    path('remove_from_shiping_cart/',views.remove_from_shiping_cart)
+    path('remove_from_shiping_cart/',views.remove_from_shiping_cart),
+    path('customerHistory/',views.customerHistory),
+    path('onshipping/',views.onshipping), 
+    path('delivered/',views.delivered),
+    
     
 ]

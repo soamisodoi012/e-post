@@ -35,3 +35,39 @@ def createItem(request):
   if serializer.is_valid():
       serializer.save()
       return  Response("Insert successful", status=status.HTTP_201_CREATED)
+@api_view(['GET'])
+def getItemById(request):
+    param_value = request.GET.get('itemCode')
+    if param_value:
+         queryset = Category.objects.filter(itemCode=param_value)
+         data=ItemSerializer(queryset,many=True)
+         #serialized_data = list(queryset.values())
+         return HttpResponse(data.data)
+    else:
+         return HttpResponse("Parameter 'param_name' is missing in the request.")
+@api_view(['DELETE'])
+def deleteCategory(request):
+    catCode = request.GET.get('catCode')
+
+    if not catCode:
+        return JsonResponse({"status": "error", "message": "Parameter 'catCode' is missing."}, status=400)
+
+    try:
+        category = Category.objects.get(catCode=catCode)
+        category.delete()
+        return JsonResponse({"status": "success", "message": "Category deleted successfully."}, status=200)
+    except Category.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Category not found."}, status=404)
+@api_view(['DELETE'])
+def deleteItem(request):
+    itemCode = request.GET.get('itemCode')
+
+    if not itemCode:
+        return JsonResponse({"status": "error", "message": "Parameter 'itemCode' is missing."}, status=400)
+
+    try:
+        category = Category.objects.get(itemCode=itemCode)
+        category.delete()
+        return JsonResponse({"status": "success", "message": "item deleted successfully."}, status=200)
+    except Category.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "item not found."}, status=404)
