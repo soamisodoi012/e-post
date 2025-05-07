@@ -13,7 +13,7 @@ def createAdress(request):
         serializer=AdressSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(" successful", status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else: 
@@ -21,6 +21,7 @@ def createAdress(request):
 @api_view(['GET'])
 def getAddress(request):
     addresId=request.GET.get('addresId')
+    print(addresId)
     if not addresId:
          return JsonResponse({"status": "error", "message": "Parameter 'addresId' is missing in the request."}, status=400)
     queryset = Address.objects.filter(addresId=addresId)
